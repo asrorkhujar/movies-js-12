@@ -1,20 +1,120 @@
-const elResult = document.querySelector('.movies__result');
+let elResult = document.querySelector('.movies__result');
+let elList = document.querySelector('.movies__list');
+let elFilmsSearchForm = document.querySelector('.js-movie-search-form');
+let elFilmsSelect = document.querySelector('.select');
+
+let timeInMs = Date.now();
+
+elResult.textContent = films.length;
+
+// FUNCTIONS
+const generateGenres = function (films) {
+  const uniqueGenres = [];
+  films.forEach(film => {
+    film.genres.forEach(genre => {
+      if (!uniqueGenres.includes(genre)) {
+        uniqueGenres.push(genre);
+      }
+      uniqueGenres.sort();
+    });
+  });
+  uniqueGenres.forEach(genre => {
+    let newFilmOption = document.createElement('option')
+
+    newFilmOption.value = genre;
+    newFilmOption.textContent = genre;
+
+    elFilmsSelect.appendChild(newFilmOption);
+  });
+};
+
+elFilmsSearchForm.addEventListener('submit', function (evt) {
+  evt.preventDefault();
+
+  const filteredFilms = [];
+
+  for (let film of films) {
+    if (elFilmsSelect.value === 'All' || film.genres.includes(elFilmsSelect.value)) {
+      filteredFilms.push(film);
+    }
+  }
+
+  if (filteredFilms.length > 0) {
+    elList.innerHTML = null;
+    elResult.innerHTML = filteredFilms.length;
+    renderFilms(filteredFilms, elList);
+  } else {
+    elList.innerHTML = '<div class="col-12">No film found</div>';
+  }
+});
+
+const renderFilms = function (filmsArray, element) {
+  filmsArray.forEach(movie => {
+    //CREATE
+    let newItem = document.createElement('li');
+    let newCard = document.createElement('div');
+    let newImg = document.createElement('img');
+    let newCardBody = document.createElement('div');
+    let newCardTitle = document.createElement('h4');
+    let newCardMovieInfo = document.createElement('p');
+    let newCardMovieDate = document.createElement('p');
+    let newCardGenresList = document.createElement('ul');
+
+    movie.genres.forEach(genre => {
+      let newCardGenres = document.createElement('li');
+      newCardGenres.textContent = genre;
+      newCardGenresList.appendChild(newCardGenres);
+    })
+
+    //SET ATTRIBUTE
+    newItem.setAttribute('class', 'movies__item movies__item col-sm-6 col-md-4 mb-4');
+    newCard.setAttribute('class', 'card movies__card h-100');
+    newImg.setAttribute('class', 'card-img-top');
+    newImg.setAttribute('src', movie.poster);
+    newCardTitle.setAttribute('class', 'text-warning');
+    newCardMovieInfo.setAttribute('class', 'text-secondary');
+    newCardGenresList.setAttribute('class', 'text-success');
+    newCardBody.setAttribute('class', 'card-body d-flex flex-column');
+
+    //TEXT CONTENT
+    newCardTitle.textContent = movie.title;
+    newCardMovieInfo.textContent = movie.overview;
+    newCardMovieDate.textContent = `Release date: ${movie.release_date}`;
+
+    //APPEND CHILD
+    element.appendChild(newItem);
+    newItem.appendChild(newCard);
+    newCard.appendChild(newImg);
+    newCard.appendChild(newCardBody);
+    newCardBody.appendChild(newCardTitle);
+    newCardBody.appendChild(newCardMovieInfo);
+    newCardBody.appendChild(newCardMovieDate);
+    newCardBody.appendChild(newCardGenresList);
+  })
+}
+
+renderFilms(films, elList);
+generateGenres(films);
+
+
+
+
+
+
+
+
+
+
+/* const elResult = document.querySelector('.movies__result');
 const elList = document.querySelector('.movies__list');
 
 const youtubeLink = 'https://www.youtube-nocookie.com/embed/';
-elResult.textContent = movies.length;
+elResult.textContent = films.length;
 
-// MODAL
-const elMovieInfoModal = document.querySelector('.movie-info-modal');
-const elMovieInfoModalTitle = elMovieInfoModal.querySelector('.movie-info-modal__title');
-const elMovieInfoModalRating = elMovieInfoModal.querySelector('.movie-info-modal__rating');
-const elMovieInfoModalYear = elMovieInfoModal.querySelector('.movie-info-modal__year');
-const elMovieInfoModalDuration = elMovieInfoModal.querySelector('.movie-info-modal__duration');
-const elMovieInfoModalIFrame = elMovieInfoModal.querySelector('.movie-info-modal__iframe');
-const elMovieInfoModalCategories = elMovieInfoModal.querySelector('.movie-info-modal__categories');
-const elMovieInfoModalSummary = elMovieInfoModal.querySelector('.movie-info-modal__summary');
-const elMovieInfoModalImdbLink = elMovieInfoModal.querySelector('.movie-info-modal__imdb-link');
 
+const renderFilms = function (filmArray, element) {
+
+}
 for (let movie of movies) {
   //CREATE ELEMENTS
   let newItemMovie = document.createElement('li');
@@ -50,12 +150,6 @@ for (let movie of movies) {
   newCardBtnMoreInfo.setAttribute('data-bs-toggle', 'modal');
   newCardBtnMoreInfo.setAttribute('data-bs-target', '#more-info-modal');
 
-  /* if (movie.categories !== '' || movie.categories !== 'Uncategorized') {
-    newCardCategory.textContent = movie.categories.join(', ');
-  } else {
-    newCardCategory.textContent = "";
-  } */
-
   //TEXT CONTENT
   newCardTitle.textContent = movie.title;
   newCardDate.textContent = `Release date: ${movie.year}`;
@@ -79,44 +173,4 @@ for (let movie of movies) {
   newCardBtnWrapper.appendChild(newCardBtn);
   newCardBtnWrapper.appendChild(newCardBtnMoreInfo);
 
-}
-
-// MODAL FUNCTION
-function updateMovieInfoModal(imdbId) {
-  const movie = movies.find(movie => movie.imdbId === imdbId);
-
-  elMovieInfoModal.dataset.uniqueId = imdbId;
-  elMovieInfoModalTitle.textContent = movie.title;
-  elMovieInfoModalRating.textContent = movie.imdbRating;
-  elMovieInfoModalYear.textContent = movie.year;
-  elMovieInfoModalDuration.textContent = getHoursStringFromMinutes(movie.runtime);
-  elMovieInfoModalIFrame.src = `https://www.youtube-nocookie.com/embed/${movie.youtubeId}`;
-  elMovieInfoModalCategories.textContent = movie.categories.join(', ');
-  elMovieInfoModalSummary.textContent = movie.summary;
-  elMovieInfoModalImdbLink.href = `https://www.imdb.com/title/${movie.imdbId}`;
-}
-
-function getHoursStringFromMinutes(minutes) {
-  return `${Math.floor(minutes / 60)} hrs ${minutes % 60} mins`;
-}
-
-function onMoviesListInfoButtonClick(evt) {
-  if (evt.target.matches('.js-more-info-button')) {
-    updateMovieInfoModal(evt.target.dataset.imdbId);
-    return;
-  }
-}
-
-function onMovieInfoModalHidden() {
-  elMovieInfoModalIFrame.src = '';
-}
-
-// EVENT LISTENERS
-if (elMoviesList) {
-  elMoviesList.addEventListener('click', onMoviesListInfoButtonClick);
-}
-
-// Stop iframe video playback on modal hide
-if (elMovieInfoModal) {
-  elMovieInfoModal.addEventListener('hidden.bs.modal', onMovieInfoModalHidden);
-}
+} */
